@@ -6,6 +6,9 @@ Another error will pop up pointing to <something>/site-packages/pafy/backend_you
 
 Edit the file it points you to, and look for the line that starts with dislikes... and comment it out (change to #dislikes...). Save the file and everything should load proper.
 
+RUNNING:
+$ python ./motion_detect.py http://url.to/YouTube
+
 Changing detection variables:
 Gaussian Blur: g will decrease blur, G will increase blur
 Threshold    : t will decrease threshold, T will increase threshold
