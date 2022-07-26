@@ -1,10 +1,11 @@
 # detect_stream
-You'll see an error relating to youtube-dl (you'll need to pip install it).
-`pip install youtube-dl`
 
-Another error will pop up pointing to <something>/site-packages/pafy/backend_youtube_dl.py 
+PREREQUISITES:
+`pip install cv2-python pafy youtube-dl`
 
-Edit the file it points you to, and look for the line that starts with dislikes... and comment it out (change to #dislikes...). Save the file and everything should load proper.
+An error will pop up pointing to <something>/site-packages/pafy/backend_youtube_dl.py and dislikes. 
+
+Edit the file it points you to, look for the line that starts with dislikes... and comment it out (change to #dislikes...). Save the file and everything should load proper.
 
 RUNNING:
 $ python ./motion_detect.py http://url.to/YouTube
