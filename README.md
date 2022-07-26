@@ -15,3 +15,4 @@ Gaussian Blur: g will decrease blur, G will increase blur
 Threshold    : t will decrease threshold, T will increase threshold
 contourArea  : c will decrease contourArea, C will increase contourArea
              : < will decrease contourArea by 200, > will increase contourArea by 200 (Tutorials started it at 10000 but low numbers helped box small objects)
+Hide Display : h will hide and unhide the detection variables

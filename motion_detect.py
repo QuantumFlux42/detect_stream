@@ -27,7 +27,7 @@ tnum = 15
 #contourArea -- Larger is bigger boxes
 cnum = 455
 
-
+show_status = 1
 url = sys.argv[1]
 video = pafy.new(url)
 best = video.getbest(preftype="mp4")
@@ -59,14 +59,15 @@ while True:
         (x, y, w, h)=cv2.boundingRect(contour)
         cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 1)
     status_list.append(status)
-	
-    # Using cv2.putText() method
-    frame = cv2.putText(frame, "( g|G )aussianBlur:" + str(gnum), g_org, font,
-                       fontScale, color, thickness, cv2.LINE_AA)
-    frame = cv2.putText(frame, "( t|T )hreshold:" + str(tnum), t_org, font,
-                       fontScale, color, thickness, cv2.LINE_AA)
-    frame = cv2.putText(frame, "(<c|C>)ontourArea:" + str(cnum), c_org, font,
-                       fontScale, color, thickness, cv2.LINE_AA)
+
+    if show_status==1:
+        # Using cv2.putText() method
+        frame = cv2.putText(frame, "( g|G )aussianBlur:" + str(gnum), g_org, font,
+                           fontScale, color, thickness, cv2.LINE_AA)
+        frame = cv2.putText(frame, "( t|T )hreshold:" + str(tnum), t_org, font,
+                           fontScale, color, thickness, cv2.LINE_AA)
+        frame = cv2.putText(frame, "(<c|C>)ontourArea:" + str(cnum), c_org, font,
+                           fontScale, color, thickness, cv2.LINE_AA)
 
     #cv2.imshow("gray_frame Frame",gray_frame)
     #cv2.imshow("Delta Frame",delta)
@@ -78,6 +79,12 @@ while True:
     if key==ord('q'):
         if status==1:
             break
+    if key==ord('h'):
+        if status==1:
+            if show_status==0:
+                show_status=1
+            else:
+                show_status=0
     if key==ord('G'):
         if status==1:
             gnum = (gnum + 2)
