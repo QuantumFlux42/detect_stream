@@ -1,12 +1,68 @@
-#####
-# Detects Motion in a YouTube strem
-# $ ./python motion_detect.py https://www.youtube.com/watch?v=<ID>
-#
-# Sensitivity is VERY HIGH. increase 15,15 to something higher (25,25) if needed
-##### 
-import cv2
+################################################################################
+#                                                                              #
+#  Detects Motion in a YouTube stream                                          #
+#  $ ./python motion_detect.py https://www.youtube.com/watch?v=<ID>            #
+#                                                                              #
+# Sensitivity is VERY HIGH.                                                    #
+# increase 15,15 to something higher (25,25) if needed                         #
+#                                                                              #
+# Dependencies:                                                                #
+#    pip install pafy                                                          #
+#    pip install youtube-dl                                                    #
+#    pip install opencv-python                                                 #
+#                                                                              #
+################################################################################
+
 import sys
+import time
+from threading import Thread
+from queue import Queue
 import pafy
+import cv2
+
+class VideoStream:
+    def __init__(self, path, queueSize = 128):
+        # initialize the file video stream along with the boolean
+        # used to indicate if the thread should be stopped or not
+        self.stream = cv2.VideoCapture(path)
+        self.stopped = False
+        # initialize the queue used to store frames read from
+        # the video file
+        self.Q = Queue(maxsize = queueSize)
+    def start(self):
+        # start a thread to read frames from the file video stream
+        t = Thread(target = self.update, args=())
+        t.daemon = True
+        t.start()
+        return self
+    def update(self):
+        # keep looping infinitely
+        while True:
+            # if the thread indicator variable is set, stop the
+            # thread
+            if self.stopped:
+                return
+            # otherwise, ensure the queue has room in it
+            if not self.Q.full():
+                # read the next frame from the file
+                (grabbed, frame) = self.stream.read()
+                # if the `grabbed` boolean is `False`, then we have
+                # reached the end of the video file
+                if not grabbed:
+                    self.stop()
+                    return
+                # add the frame to the queue
+                self.Q.put(frame)
+    def read(self):
+        # return next frame in the queue
+        return self.Q.get()
+    def more(self):
+        # return True if there are still frames in the queue
+        print(self.Q.qsize())
+        return self.Q.qsize() > 0
+    def stop(self):
+        # indicate that the thread should be stopped
+        self.stopped = True
 
 font = cv2.FONT_HERSHEY_DUPLEX
 # org
@@ -28,18 +84,27 @@ tnum = 15
 cnum = 455
 
 show_status = 1
+if len(sys.argv) < 2:
+    print("Usage: $ ./python motion_detect.py https://www.youtube.com/watch?v=<ID>")
+    quit()
+
 url = sys.argv[1]
 video = pafy.new(url)
-best = video.getbest(preftype="mp4")
-
-#capture = cv2.VideoCapture(best.url)
+for stream in video.streams:
+    print(stream)
+best = video.getbest(preftype = "mp4")
+print("Selected:", best)
 
 baseline_image=None
 status_list=[None,None]
-video=cv2.VideoCapture(best.url)
 
+vs = VideoStream(best.url).start()
+time.sleep(5) # Get a chance to buffer some frames
+print("Video Capture Started")
+
+# while vs.more():
 while True:
-    check, frame = video.read()
+    frame = vs.read()
     status=0
     gray_frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
     gray_frame=cv2.GaussianBlur(gray_frame,(gnum,gnum),0)
@@ -117,8 +182,9 @@ while True:
         if status==1:
             cnum = (cnum - 200)
             print("contourArea:", cnum)
+    time.sleep(0.1)
 
 
 #Clean up, Free memory
-video.release()
+vs.stop()
 cv2.destroyAllWindows
