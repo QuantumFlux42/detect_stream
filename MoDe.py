@@ -66,9 +66,9 @@ class VideoStream:
 
 font = cv2.FONT_HERSHEY_DUPLEX
 # org
-g_org = (1, 50)
-t_org = (1, 90)
-c_org = (1, 130)
+g_org = (1, 100)
+c_org = (1, 170)
+d_org = (1, 140)
 # fontScale
 fontScale = 1
 # Blue color in BGR
@@ -77,26 +77,33 @@ color = (255, 0, 0)
 thickness = 2
 
 # GaussianBlur -- Larger is bigger kernel
-gnum = 25
-# Threshold
-tnum = 15
+gnum = 11
 #contourArea -- Larger is bigger boxes
-cnum = 455
+cnum = 201
+# delta number
+dnum = 25
 
 show_status = 1
+
 if len(sys.argv) < 2:
     print("Usage: $ ./python motion_detect.py https://www.youtube.com/watch?v=<ID>")
     quit()
 
-url = sys.argv[1]
-video = pafy.new(url)
-for stream in video.streams:
-    print(stream)
-best = video.getbest(preftype = "mp4")
-print("Selected:", best)
+if 'http' in sys.argv[1]:
+    url = sys.argv[1]
+    video = pafy.new(url)
+    for stream in video.streams:
+        print(stream)
+    best = video.getbest(preftype="mp4")
+    print("Selected:", best)
 
-baseline_image=None
-status_list=[None,None]
+    baseline_image=None
+    status_list=[None,None]
+    video=cv2.VideoCapture(best.url)
+else:
+    baseline_image=None
+    status_list=[None,None]
+    video=cv2.VideoCapture(sys.argv[1])
 
 vs = VideoStream(best.url).start()
 time.sleep(5) # Get a chance to buffer some frames
@@ -114,11 +121,11 @@ while True:
         continue
 
     delta=cv2.absdiff(baseline_image,gray_frame)
-    threshold=cv2.threshold(delta, 3, tnum, cv2.THRESH_BINARY)[1]
+    threshold=cv2.threshold(delta, dnum, 255, cv2.THRESH_BINARY)[1]
     (contours,_)=cv2.findContours(threshold,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
-        if cv2.contourArea(contour) < 455:
+        if cv2.contourArea(contour) < cnum:
             continue
         status=1
         (x, y, w, h)=cv2.boundingRect(contour)
@@ -129,9 +136,9 @@ while True:
         # Using cv2.putText() method
         frame = cv2.putText(frame, "( g|G )aussianBlur:" + str(gnum), g_org, font,
                            fontScale, color, thickness, cv2.LINE_AA)
-        frame = cv2.putText(frame, "( t|T )hreshold:" + str(tnum), t_org, font,
-                           fontScale, color, thickness, cv2.LINE_AA)
         frame = cv2.putText(frame, "(<c|C>)ontourArea:" + str(cnum), c_org, font,
+                           fontScale, color, thickness, cv2.LINE_AA)
+        frame = cv2.putText(frame, "( d|D )elta:" + str(dnum), d_org, font,
                            fontScale, color, thickness, cv2.LINE_AA)
 
     #cv2.imshow("gray_frame Frame",gray_frame)
@@ -156,34 +163,48 @@ while True:
             print("GaussianBlur:", gnum)
     if key==ord('g'):
         if status==1:
-            gnum = (gnum - 2)
-            print("GaussianBlur:", gnum)
-    if key==ord('T'):
-        if status==1:
-            tnum = (tnum + 1)
-            print("Threshold:", tnum)
-    if key==ord('t'):
-        if status==1:
-            tnum = (tnum - 1)
-            print("Threshold:", tnum)
+            if gnum == 1:
+                gnum = 1
+            else:
+                gnum = (gnum - 2)
     if key==ord('C'):
         if status==1:
             cnum = (cnum + 1)
             print("contourArea:", cnum)
     if key==ord('c'):
         if status==1:
-            cnum = (cnum - 1)
-            print("contourArea:", cnum)
+            if cnum == 1:
+                cnum = 1
+            else:
+                cnum = (cnum - 1)
     if key==ord('>'):
         if status==1:
             cnum = (cnum + 200)
             print("contourArea:", cnum)
     if key==ord('<'):
         if status==1:
-            cnum = (cnum - 200)
-            print("contourArea:", cnum)
-    time.sleep(0.1)
+            if cnum < 201:
+                cnum = 1
+            else:
+                cnum = (cnum - 200)
+    if key==ord('D'):
+        if status==1:
+            dnum = (dnum + 1)
+            print("Delta:", dnum)
+    if key==ord('d'):
+        if status==1:
+            if dnum == 1:
+                dnum = 1
+            else:
+                dnum = (dnum - 1)
+    if key==ord('r'):
+        if status==1:
+            # Reset settings
+            gnum = 25
+            cnum = 10000 
+            dnum = 5
 
+    time.sleep(0.1)
 
 #Clean up, Free memory
 vs.stop()
