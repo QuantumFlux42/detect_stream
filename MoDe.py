@@ -27,9 +27,12 @@ import pafy
 import sys
 import time
 
-verbose = False
+verbose = True
 use_threading = False
 show_quadrants = False
+# Codec, if X264 does not work try using mp4v
+codec = "X264"
+#codec = "mp4v"
 
 if verbose: print("(Mo)tion (De)tect Started...")
 
@@ -96,6 +99,10 @@ while True:
         frame = vs.read()
     else:
         check, frame = video.read()
+
+    if frame is None:
+        print("Unable to get frame")
+        quit()
 
     (frameHeight, frameWidth) = frame.shape[:2]
     (frameHalfHeight, frameHalfWidth) = (frameHeight // 2, frameWidth // 2)
@@ -204,9 +211,9 @@ while True:
     if key == ord('S'):
         if not kcw.recording:
             timestamp = datetime.datetime.now()
-            p = "{}/{}.avi".format(out_dir,
+            p = "{}/{}.mp4".format(out_dir,
                 timestamp.strftime("%Y%m%d-%H%M%S"))
-            kcw.start(p, cv2.VideoWriter_fourcc(*"X264"),20)
+            kcw.start(p, cv2.VideoWriter_fourcc(*codec), 20, frameWidth, frameHeight)
     if updateConsecFrames:
         consecFrames += 1
     # update the key frame clip buffer
@@ -216,7 +223,8 @@ while True:
     if kcw.recording and consecFrames == buffer_size:
         kcw.finish()
     if key == ord('x'):
-        kcw.finish()
+        if kcw.recording:
+            kcw.finish()
     if key == ord('p'):
         cv2.waitKey(-1)
 
@@ -226,5 +234,6 @@ while True:
 if kcw.recording:
     kcw.finish()
 #Clean up, Free memory
-vs.stop()
+if use_threading:
+    vs.stop()
 cv2.destroyAllWindows

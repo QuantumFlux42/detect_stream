@@ -7,6 +7,8 @@
 from collections import deque
 from queue import Queue
 from threading import Thread
+import cv2
+import time
 
 buffer_size = 684
 # Shameless jack of code 
@@ -32,13 +34,12 @@ class KeyClipWriter:
         if self.recording:
             self.Q.put(frame)
 
-    def start(self, outputPath, fourcc, fps):
+    def start(self, outputPath, fourcc, fps, width, height):
         # indicate that we are recording, start the video writer,
         # and initialize the queue of frames that need to be written
         # to the video file
         self.recording = True
-        self.writer = cv2.VideoWriter(outputPath, fourcc, fps,
-             (1920,1080), True)
+        self.writer = cv2.VideoWriter(outputPath, fourcc, fps, (width, height), True)
         #    (self.frames[0].shape[1], self.frames[0].shape[0]), True)
         self.Q = Queue()
         # loop over the frames in the deque structure and add them
@@ -74,6 +75,7 @@ class KeyClipWriter:
             self.writer.write(frame)
 
     def finish(self):
+        print("finishing key clip writer...")
         # indicate that we are done recording, join the thread,
         # flush all remaining frames in the queue to file, and
         # release the writer pointer
@@ -81,3 +83,4 @@ class KeyClipWriter:
         self.thread.join()
         self.flush()
         self.writer.release()
+        print("done!")

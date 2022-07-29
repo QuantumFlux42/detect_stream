@@ -4,9 +4,9 @@
 #                                                                              #
 ################################################################################
 
-import cv2
-from threading import Thread
 from queue import Queue
+from threading import Thread
+import cv2
 
 class VideoStream:
     def __init__(self, path, queueSize = 128):
