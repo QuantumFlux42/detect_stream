@@ -1,0 +1,6 @@
+# Git Ignore File
+
+__pycache__/
+saved/*.avi
+saved/*.png
+saved/*.mp4
