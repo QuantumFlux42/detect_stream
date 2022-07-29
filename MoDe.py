@@ -5,8 +5,11 @@
 # Sensitivity is VERY HIGH. increase 15,15 to something higher (25,25) if needed
 ##### 
 import cv2
+import os
 import sys
 import pafy
+
+out_dir = './stills'
 
 font = cv2.FONT_HERSHEY_DUPLEX
 # org
@@ -26,11 +29,12 @@ gnum = 11
 cnum = 201
 # delta number
 dnum = 25
-
+count = 0
 show_status = 1
 if 'http' in sys.argv[1]:
     url = sys.argv[1]
     video = pafy.new(url)
+    v_title = video.title
     best = video.getbest(preftype="mp4")
 
     baseline_image=None
@@ -76,7 +80,7 @@ while True:
     #cv2.imshow("gray_frame Frame",gray_frame)
     #cv2.imshow("Delta Frame",delta)
     #cv2.imshow("Threshold Frame",threshold)
-    cv2.imshow("Color Frame",frame)
+    cv2.imshow(v_title, frame)
 
     key=cv2.waitKey(1)
 
@@ -92,7 +96,6 @@ while True:
     if key==ord('G'):
         if status==1:
             gnum = (gnum + 2)
-            print("GaussianBlur:", gnum)
     if key==ord('g'):
         if status==1:
             if gnum == 1:
@@ -102,7 +105,6 @@ while True:
     if key==ord('C'):
         if status==1:
             cnum = (cnum + 1)
-            print("contourArea:", cnum)
     if key==ord('c'):
         if status==1:
             if cnum == 1:
@@ -112,7 +114,6 @@ while True:
     if key==ord('>'):
         if status==1:
             cnum = (cnum + 200)
-            print("contourArea:", cnum)
     if key==ord('<'):
         if status==1:
             if cnum < 201:
@@ -122,7 +123,6 @@ while True:
     if key==ord('D'):
         if status==1:
             dnum = (dnum + 1)
-            print("Delta:", dnum)
     if key==ord('d'):
         if status==1:
             if dnum == 1:
@@ -135,7 +135,14 @@ while True:
             gnum = 25
             cnum = 10000 
             dnum = 5
+    if key == ord('s'):
+        img_name = "opencv_frame_{}.png".format(count)
+        cv2.imwrite(img_name, frame)
+        count += 1
+    if key == ord('p'):
+        cv2.waitKey(-1)
 
 #Clean up, Free memory
 video.release()
 cv2.destroyAllWindows
+
