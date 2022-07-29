@@ -42,6 +42,7 @@ else:
     video=cv2.VideoCapture(sys.argv[1])
 
 while True:
+    video.set(cv2.CAP_PROP_BUFFERSIZE, 530)
     check, frame = video.read()
     status=0
     gray_frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
