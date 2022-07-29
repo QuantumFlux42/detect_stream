@@ -27,9 +27,15 @@ import pafy
 import sys
 import time
 
+verbose = False
+use_threading = False
+show_quadrants = False
+
+if verbose: print("(Mo)tion (De)tect Started...")
+
 buffer_size = 684
 
-kcw = KeyClipWriter(bufSize=buffer_size)
+kcw = KeyClipWriter(bufSize = buffer_size)
 consecFrames = 0
 
 out_dir = './saved'
@@ -63,11 +69,12 @@ if len(sys.argv) < 2:
 if 'http' in sys.argv[1]:
     url = sys.argv[1]
     video = pafy.new(url)
-    for stream in video.streams:
-        print(stream)
+    if verbose:
+        for stream in video.streams:
+            print(stream)
     v_title = video.title
     best = video.getbest(preftype="mp4")
-    print("Selected:", best)
+    if verbose: print("Selected:", best)
     path = best.url
 else:
     path = sys.argv[1]
@@ -76,35 +83,45 @@ else:
 baseline_image = None
 status_list = [None,None]
 
-vs = VideoStream(path).start()
-time.sleep(5) # Get a chance to buffer some frames
-print("Video Capture Started")
+if use_threading:
+    vs = VideoStream(path).start()
+    time.sleep(5) # Get a chance to buffer some frames
+else:
+    video = cv2.VideoCapture(path)
+if verbose: print("Video Capture Started")
 
 # while vs.more():
 while True:
-    frame = vs.read()
+    if use_threading:
+        frame = vs.read()
+    else:
+        check, frame = video.read()
+
+    (frameHeight, frameWidth) = frame.shape[:2]
+    (frameHalfHeight, frameHalfWidth) = (frameHeight // 2, frameWidth // 2)
+
     status=0
-    gray_frame=cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
-    gray_frame=cv2.GaussianBlur(gray_frame,(gnum,gnum),0)
+    gray_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    gray_frame = cv2.GaussianBlur(gray_frame, (gnum, gnum), 0)
     updateConsecFrames = True
 
     if baseline_image is None:
-        baseline_image=gray_frame
+        baseline_image = gray_frame
         continue
 
-    delta=cv2.absdiff(baseline_image,gray_frame)
-    threshold=cv2.threshold(delta, dnum, 255, cv2.THRESH_BINARY)[1]
-    (contours,_)=cv2.findContours(threshold,cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    delta = cv2.absdiff(baseline_image, gray_frame)
+    threshold = cv2.threshold(delta, dnum, 255, cv2.THRESH_BINARY)[1]
+    (contours, _) = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
         if cv2.contourArea(contour) < cnum:
             continue
-        status=1
-        (x, y, w, h)=cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x+w, y+h), (0,255,0), 1)
+        status = 1
+        (x, y, w, h) = cv2.boundingRect(contour)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
     status_list.append(status)
 
-    if show_status==1:
+    if show_status == 1:
         # Using cv2.putText() method
         frame = cv2.putText(frame, "gGaussianBlur:" + str(gnum), g_org, font,
                            fontScale, color, thickness, cv2.LINE_AA)
@@ -113,62 +130,67 @@ while True:
         frame = cv2.putText(frame, "dDelta:" + str(dnum), d_org, font,
                            fontScale, color, thickness, cv2.LINE_AA)
 
-    #cv2.imshow("gray_frame Frame",gray_frame)
-    #cv2.imshow("Delta Frame",delta)
-    #cv2.imshow("Threshold Frame",threshold)
-    (h, w) = frame.shape[:2]
-    print(h, w)
-    cv2.imshow(v_title,frame[0:h, 0:w])
+    #cv2.imshow("gray_frame Frame", gray_frame)
+    #cv2.imshow("Delta Frame", delta)
+    #cv2.imshow("Threshold Frame", threshold)
 
-    key=cv2.waitKey(1)
+    if show_quadrants:
+        cv2.imshow(v_title + " Q1",frame[0:frameHalfHeight, 0:frameHalfWidth])
+        cv2.imshow(v_title + " Q2",frame[0:frameHalfHeight, frameHalfWidth:frameWidth])
+        cv2.imshow(v_title + " Q3",frame[frameHalfHeight:frameHeight, 0:frameHalfWidth])
+        cv2.imshow(v_title + " Q4",frame[frameHalfHeight:frameHeight, frameHalfWidth:frameWidth])
+    else:
+        cv2.imshow(v_title, frame)
 
-    if key==ord('q'):
-        if status==1:
+    key = cv2.waitKey(1)
+
+    if key == ord('q'):
+        if status == 1:
             break
-    if key==ord('h'):
-        if status==1:
-            if show_status==0:
-                show_status=1
+    if key == ord('h'):
+        if status == 1:
+            if show_status == 0:
+                show_status = 1
             else:
-                show_status=0
-    if key==ord('G'):
-        if status==1:
+                show_status = 0
+    if key == ord('G'):
+        if status == 1:
             gnum = (gnum + 2)
-    if key==ord('g'):
-        if status==1:
+    if key == ord('g'):
+        if status == 1:
             if gnum == 1:
                 gnum = 1
             else:
                 gnum = (gnum - 2)
-    if key==ord('C'):
-        if status==1:
+    if key == ord('C'):
+        if status == 1:
             cnum = (cnum + 1)
-    if key==ord('c'):
-        if status==1:
+    if key == ord('c'):
+        if status == 1:
             if cnum == 1:
                 cnum = 1
             else:
                 cnum = (cnum - 1)
-    if key==ord('>'):
-        if status==1:
+    if key == ord('>'):
+        if status == 1:
             cnum = (cnum + 200)
-    if key==ord('<'):
-        if status==1:
+    if key == ord('<'):
+        if status == 1:
             if cnum < 201:
                 cnum = 1
             else:
                 cnum = (cnum - 200)
-    if key==ord('D'):
-        if status==1:
+    if key == ord('D'):
+        if status == 1:
             dnum = (dnum + 1)
-    if key==ord('d'):
-        if status==1:
+    if key == ord('d'):
+        if status == 1:
             if dnum == 1:
                 dnum = 1
             else:
                 dnum = (dnum - 1)
-    if key==ord('r'):
-        if status==1:
+    if key == ord('r'):
+        if status == 1:
             # Reset settings
             gnum = 25
             cnum = 10000 
@@ -198,7 +220,8 @@ while True:
     if key == ord('p'):
         cv2.waitKey(-1)
 
-    time.sleep(0.1)
+    if use_threading:
+        time.sleep(0.1)
 
 if kcw.recording:
     kcw.finish()
