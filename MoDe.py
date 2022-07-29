@@ -8,6 +8,7 @@ import cv2
 import os
 import sys
 import pafy
+import time
 
 out_dir = './stills'
 
@@ -136,7 +137,7 @@ while True:
             cnum = 10000 
             dnum = 5
     if key == ord('s'):
-        img_name = "opencv_frame_{}.png".format(count)
+        img_name = "opencv_frame_{}.png".format(time.time())
         cv2.imwrite(img_name, frame)
         count += 1
     if key == ord('p'):
