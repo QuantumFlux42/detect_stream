@@ -18,8 +18,8 @@
 #                                                                              #
 ################################################################################
 
-from video_stream import VideoStream
-from key_clip_writer import KeyClipWriter
+from modules.video_stream import VideoStream
+from modules.key_clip_writer import KeyClipWriter
 import cv2
 import datetime
 import os
