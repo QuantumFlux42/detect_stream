@@ -1,12 +1,17 @@
 ################################################################################
 #                                                                              #
-#  Detects Motion in a YouTube stream                                          #
-#  $ ./python motion_detect.py https://www.youtube.com/watch?v=<ID>            #
+#  (Mo)tion (De)tect                                                           #
+#  Detects Motion in a YouTube streams or video files                          #
 #                                                                              #
-# Sensitivity is VERY HIGH.                                                    #
-# increase 15,15 to something higher (25,25) if needed                         #
+#  Usage:                                                                      #
+#    $ ./python MoDe.py https://www.youtube.com/watch?v=<ID>                   #
+#    $ ./python MoDe.py file.mp4                                               #
 #                                                                              #
-# Dependencies:                                                                #
+#  Notes:                                                                      #
+#    Sensitivity is VERY HIGH.                                                 #
+#    increase 15,15 to something higher (25,25) if needed                      #
+#                                                                              #
+#  Dependencies:                                                               #
 #    pip install pafy                                                          #
 #    pip install youtube-dl                                                    #
 #    pip install opencv-python                                                 #
@@ -86,7 +91,8 @@ dnum = 25
 show_status = 1
 
 if len(sys.argv) < 2:
-    print("Usage: $ ./python motion_detect.py https://www.youtube.com/watch?v=<ID>")
+    print("Usage: $ ./python MoDe.py https://www.youtube.com/watch?v=<ID>")
+    print("Usage: $ ./python MoDe.py file.mp4")
     quit()
 
 if 'http' in sys.argv[1]:
@@ -96,16 +102,14 @@ if 'http' in sys.argv[1]:
         print(stream)
     best = video.getbest(preftype="mp4")
     print("Selected:", best)
-
-    baseline_image=None
-    status_list=[None,None]
-    video=cv2.VideoCapture(best.url)
+    path = best.url
 else:
-    baseline_image=None
-    status_list=[None,None]
-    video=cv2.VideoCapture(sys.argv[1])
+    path = sys.argv[1]
 
-vs = VideoStream(best.url).start()
+baseline_image = None
+status_list = [None,None]
+
+vs = VideoStream(path).start()
 time.sleep(5) # Get a chance to buffer some frames
 print("Video Capture Started")
 
@@ -144,7 +148,9 @@ while True:
     #cv2.imshow("gray_frame Frame",gray_frame)
     #cv2.imshow("Delta Frame",delta)
     #cv2.imshow("Threshold Frame",threshold)
-    cv2.imshow("Color Frame",frame)
+    (h, w) = frame.shape[:2]
+    print(h, w)
+    cv2.imshow("Color Frame",frame[0:h, 0:w])
 
     key=cv2.waitKey(1)
 
