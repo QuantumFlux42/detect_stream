@@ -28,7 +28,7 @@ import sys
 import time
 
 verbose = True
-use_threading = False
+use_threading = False 
 show_quadrants = False
 # Codec, if X264 does not work try using mp4v
 codec = "X264"
@@ -151,7 +151,7 @@ while True:
 
     key = cv2.waitKey(1)
 
-    if key == ord('q'):
+    if key == ord('Q'):
         if status == 1:
             break
     if key == ord('h'):
