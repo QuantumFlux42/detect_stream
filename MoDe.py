@@ -91,7 +91,7 @@ class KeyClipWriter:
 kcw = KeyClipWriter(bufSize=buffer_size)
 consecFrames = 0
 
-out_dir = './stills'
+out_dir = './saved'
 
 font = cv2.FONT_HERSHEY_DUPLEX
 # org
