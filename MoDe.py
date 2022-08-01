@@ -29,7 +29,9 @@ import time
 
 verbose = True
 use_threading = False 
-show_quadrants = False
+#use_threading = True 
+#show_quadrants = False 
+show_quadrants = True 
 # Codec, if X264 does not work try using mp4v
 codec = "X264"
 #codec = "mp4v"
@@ -125,7 +127,7 @@ while True:
             continue
         status = 1
         (x, y, w, h) = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 1)
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
     status_list.append(status)
 
     if show_status == 1:
@@ -154,12 +156,11 @@ while True:
     if key == ord('Q'):
         if status == 1:
             break
-    if key == ord('h'):
-        if status == 1:
-            if show_status == 0:
-                show_status = 1
-            else:
-                show_status = 0
+    if key == ord('h'): 
+        if status == 1 and show_status == 0:
+            show_status = 1
+        else:
+            show_status = 0
     if key == ord('G'):
         if status == 1:
             gnum = (gnum + 2)
