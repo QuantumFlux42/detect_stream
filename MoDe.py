@@ -4,17 +4,23 @@
 #  Detects Motion in a YouTube streams or video files                          #
 #                                                                              #
 #  Usage:                                                                      #
-#    $ ./python MoDe.py https://www.youtube.com/watch?v=<ID>                   #
-#    $ ./python MoDe.py file.mp4                                               #
+#    $ ./python MoDe.py -s https://www.youtube.com/watch?v=<ID>                #
+#    $ ./python MoDe.py -s file.mp4                                            #
 #                                                                              #
 #  Notes:                                                                      #
 #    Sensitivity is VERY HIGH.                                                 #
-#    increase 15,15 to something higher (25,25) if needed                      #
+#    increase -G, --gaussian-blur to something higher like 25 (Default 15)     #
+#    increase -C, --contourarea to something HUGE like 10000 (Default 201)     #
 #                                                                              #
+#    Hitting "r" while in screen will reset all values to normal defaults      #
+#      G - 25 , D - 5, C - 10000                                               #
+#                                                                              #                                                                              #
 #  Dependencies:                                                               #
 #    pip install pafy                                                          #
 #    pip install youtube-dl                                                    #
 #    pip install opencv-python                                                 #
+#                                                                              #
+#    backend-youtube-dl will need to be modified to disable likes              #
 #                                                                              #
 ################################################################################
 
@@ -37,6 +43,9 @@ ap.add_argument("-q", "--quad", type=int, default=None, help="Enable Quadrant Sp
 ap.add_argument("-s", "--source", help="http YouTube URL or File Path")
 ap.add_argument("-t", "--threading", type=int, default=None, help="Enable Threading")
 ap.add_argument("-v", "--verbose", type=int, default=None, help="Enable Verbose")
+ap.add_argument("-C", "--contourarea", type=int, default=201, help="Define contourArea")
+ap.add_argument("-D", "--delta", type=int, default=25, help="Define Sensitivity Delta")
+ap.add_argument("-g", "--gaussianblur", type=int, default=11, help="Define gaussianBlur value")
 args = vars(ap.parse_args())
 
 if args.get('verbose', None) is None:
@@ -51,9 +60,8 @@ if args.get('quad', None) is None:
     show_quadrants = False 
 else:
     show_quadrants = True 
-# Codec, if X264 does not work try using mp4v
-codec = args["codec"] 
-#codec = "mp4v"
+
+codec = args["codec"]
 
 if verbose: print("(Mo)tion (De)tect Started...")
 
@@ -64,27 +72,16 @@ consecFrames = 0
 
 out_dir = './saved'
 
-font = cv2.FONT_HERSHEY_DUPLEX
-# org
-g_org = (1, 100)
-c_org = (1, 170)
-d_org = (1, 140)
-# fontScale
-fontScale = 1
-# Blue color in BGR
-color = (255, 0, 0)
-# Line thickness of 2 px
-thickness = 2
+# Sensitivity Settings
+gnum = args["gaussianblur"]
+cnum = args["contourarea"]
+dnum = args["delta"]
 
-# GaussianBlur -- Larger is bigger kernel
-gnum = 11
-#contourArea -- Larger is bigger boxes
-cnum = 201
-# delta number
-dnum = 25
+# Initialize count and show_status
 count = 0
 show_status = 1
 
+# Stream or Local File
 if 'http' in args["source"]:
     url = args["source"]
     video = pafy.new(url)
@@ -99,6 +96,7 @@ else:
     path = args["source"] 
     v_title = os.path.basename(path)
 
+# Baseline and setting status_list
 baseline_image = None
 status_list = [None,None]
 
@@ -141,8 +139,7 @@ while True:
     status_list.append(status)
     
     if show_status == 1:
-        osd.display_status(show_status, frame, gnum, g_org, cnum, c_org, dnum, d_org, 
-                  font, fontScale, color, thickness)
+        osd.display_status(frame, gnum, cnum, dnum)
 
     #cv2.imshow("gray_frame Frame", gray_frame)
     #cv2.imshow("Delta Frame", delta)
