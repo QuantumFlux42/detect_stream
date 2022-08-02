@@ -20,6 +20,10 @@
 
 from modules.video_stream import VideoStream
 from modules.key_clip_writer import KeyClipWriter
+from modules.draw_contours import draw
+import modules.key_interrupt
+import modules.osd as osd
+import argparse
 import cv2
 import datetime
 import os
@@ -27,13 +31,28 @@ import pafy
 import sys
 import time
 
-verbose = True
-use_threading = False 
-#use_threading = True 
-#show_quadrants = False 
-show_quadrants = True 
+ap = argparse.ArgumentParser()
+ap.add_argument("-c", "--codec", type=str, default='x264', help="x264 mpv4 divx")
+ap.add_argument("-q", "--quad", type=int, default=None, help="Enable Quadrant Splitting")
+ap.add_argument("-s", "--source", help="http YouTube URL or File Path")
+ap.add_argument("-t", "--threading", type=int, default=None, help="Enable Threading")
+ap.add_argument("-v", "--verbose", type=int, default=None, help="Enable Verbose")
+args = vars(ap.parse_args())
+
+if args.get('verbose', None) is None:
+    verbose = False
+else:
+    verbose = True
+if args.get('threading', None) is None:
+    use_threading = False
+else:
+    use_threading = True 
+if args.get('quad', None) is None:
+    show_quadrants = False 
+else:
+    show_quadrants = True 
 # Codec, if X264 does not work try using mp4v
-codec = "X264"
+codec = args["codec"] 
 #codec = "mp4v"
 
 if verbose: print("(Mo)tion (De)tect Started...")
@@ -66,13 +85,8 @@ dnum = 25
 count = 0
 show_status = 1
 
-if len(sys.argv) < 2:
-    print("Usage: $ ./python MoDe.py https://www.youtube.com/watch?v=<ID>")
-    print("Usage: $ ./python MoDe.py file.mp4")
-    quit()
-
-if 'http' in sys.argv[1]:
-    url = sys.argv[1]
+if 'http' in args["source"]:
+    url = args["source"]
     video = pafy.new(url)
     if verbose:
         for stream in video.streams:
@@ -82,7 +96,7 @@ if 'http' in sys.argv[1]:
     if verbose: print("Selected:", best)
     path = best.url
 else:
-    path = sys.argv[1]
+    path = args["source"] 
     v_title = os.path.basename(path)
 
 baseline_image = None
@@ -123,21 +137,12 @@ while True:
     (contours, _) = cv2.findContours(threshold, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 
     for contour in contours:
-        if cv2.contourArea(contour) < cnum:
-            continue
-        status = 1
-        (x, y, w, h) = cv2.boundingRect(contour)
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 1)
+        draw(frame, contour, cnum)
     status_list.append(status)
-
+    
     if show_status == 1:
-        # Using cv2.putText() method
-        frame = cv2.putText(frame, "gGaussianBlur:" + str(gnum), g_org, font,
-                           fontScale, color, thickness, cv2.LINE_AA)
-        frame = cv2.putText(frame, "<cC>ontourArea:" + str(cnum), c_org, font,
-                           fontScale, color, thickness, cv2.LINE_AA)
-        frame = cv2.putText(frame, "dDelta:" + str(dnum), d_org, font,
-                           fontScale, color, thickness, cv2.LINE_AA)
+        osd.display_status(show_status, frame, gnum, g_org, cnum, c_org, dnum, d_org, 
+                  font, fontScale, color, thickness)
 
     #cv2.imshow("gray_frame Frame", gray_frame)
     #cv2.imshow("Delta Frame", delta)
@@ -152,7 +157,13 @@ while True:
         cv2.imshow(v_title, frame)
 
     key = cv2.waitKey(1)
-
+    # I will get this mess cleaned up AND get the keys to be more responsive
+    # Some how....
+    # Some way...
+    # Maybe not now..
+    # Maybe not today.
+    #modules.key_interrupt(status, show_status, gnum, cnum, dnum, out_dir, frame,
+    #                     updateConsecFrames, codec, frameWidth, frameHeight, kcw)
     if key == ord('Q'):
         if status == 1:
             break
