@@ -46,6 +46,7 @@ ap.add_argument("-v", "--verbose", type=int, default=None, help="Enable Verbose"
 ap.add_argument("-C", "--contourarea", type=int, default=201, help="Define contourArea")
 ap.add_argument("-D", "--delta", type=int, default=25, help="Define Sensitivity Delta")
 ap.add_argument("-g", "--gaussianblur", type=int, default=11, help="Define gaussianBlur value")
+ap.add_argument("-o", "--outdir", type=str, default="./saved", help="Directory to save clips/captures")
 args = vars(ap.parse_args())
 
 if args.get('verbose', None) is None:
@@ -61,6 +62,7 @@ if args.get('quad', None) is None:
 else:
     show_quadrants = True 
 
+# Set codec variable from CLI Option/Defaults
 codec = args["codec"]
 
 if verbose: print("(Mo)tion (De)tect Started...")
@@ -70,7 +72,7 @@ buffer_size = 684
 kcw = KeyClipWriter(bufSize = buffer_size)
 consecFrames = 0
 
-out_dir = './saved'
+out_dir = args["outdir"]
 
 # Sensitivity Settings
 gnum = args["gaussianblur"]
@@ -136,6 +138,7 @@ while True:
 
     for contour in contours:
         draw(frame, contour, cnum)
+        status=1
     status_list.append(status)
     
     if show_status == 1:
