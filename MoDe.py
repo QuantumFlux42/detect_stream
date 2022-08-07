@@ -27,14 +27,12 @@
 from modules.video_stream import VideoStream
 from modules.key_clip_writer import KeyClipWriter
 from modules.draw_contours import draw
-import modules.key_interrupt
 import modules.osd as osd
 import argparse
 import cv2
 import datetime
 import os
 import pafy
-import sys
 import time
 
 ap = argparse.ArgumentParser()
@@ -156,14 +154,8 @@ while True:
     else:
         cv2.imshow(v_title, frame)
 
+    # Key input jive
     key = cv2.waitKey(1)
-    # I will get this mess cleaned up AND get the keys to be more responsive
-    # Some how....
-    # Some way...
-    # Maybe not now..
-    # Maybe not today.
-    #modules.key_interrupt(status, show_status, gnum, cnum, dnum, out_dir, frame,
-    #                     updateConsecFrames, codec, frameWidth, frameHeight, kcw)
     if key == ord('Q'):
         if status == 1:
             break
@@ -234,9 +226,11 @@ while True:
     # number of frames with no action, stop recording the clip
     if kcw.recording and consecFrames == buffer_size:
         kcw.finish()
+    # Stop Recording by pressing 'x'
     if key == ord('x'):
         if kcw.recording:
             kcw.finish()
+    # Pause with 'p'
     if key == ord('p'):
         cv2.waitKey(-1)
 
