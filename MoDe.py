@@ -37,7 +37,7 @@ import time
 
 ap = argparse.ArgumentParser()
 #ap.add_argument("-h", "--help", help="This message")
-ap.add_argument("-c", "--codec", type=str, default='x264', help="x264 mpv4 divx")
+ap.add_argument("-c", "--codec", type=str, default='avc1', help="avc1 x264 mpv4 divx")
 ap.add_argument("-q", "--quad", type=int, default=None, help="Enable Quadrant Splitting")
 ap.add_argument("-s", "--source", help="http YouTube URL or File Path")
 ap.add_argument("-t", "--threading", type=int, default=None, help="Enable Threading")
@@ -225,9 +225,9 @@ while True:
     if key == ord('r'):
         if status == 1:
             # Reset settings
-            gnum = 25
-            cnum = 10000 
-            dnum = 5
+            gnum = 21
+            cnum = 500 
+            dnum = 25
     if key == ord('s'):
         timestamp = datetime.datetime.now()
         img_name = "{}/{}.png".format(out_dir, 
@@ -239,6 +239,7 @@ while True:
             timestamp = datetime.datetime.now()
             p = "{}/{}.mp4".format(out_dir,
                 timestamp.strftime("%Y%m%d-%H%M%S"))
+            print("Recording...")
             kcw.start(p, cv2.VideoWriter_fourcc(*codec), 20, frameWidth, frameHeight)
     if updateConsecFrames:
         consecFrames += 1
